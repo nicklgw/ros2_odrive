@@ -1,0 +1,140 @@
+dev0.erase_configuration()  #恢复默认参数
+
+#主板参数配置
+dev0.config.brake_resistance = 2.0
+dev0.config.dc_bus_undervoltage_trip_level = 8.0
+dev0.config.dc_bus_overvoltage_trip_level = 56.0
+dev0.config.dc_max_positive_current = 20.0
+dev0.config.dc_max_negative_current = -3.0
+dev0.config.max_regen_current = 0
+dev0.save_configuration()
+
+#电机参数配置
+dev0.axis0.motor.config.pole_pairs = 7
+dev0.axis0.motor.config.calibration_current = 5
+dev0.axis0.motor.config.resistance_calib_max_voltage = 2
+dev0.axis0.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
+dev0.axis0.motor.config.current_lim = 15
+dev0.axis0.motor.config.requested_current_range = 20
+
+dev0.axis1.motor.config.pole_pairs = 7
+dev0.axis1.motor.config.calibration_current = 5
+dev0.axis1.motor.config.resistance_calib_max_voltage = 2
+dev0.axis1.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
+dev0.axis1.motor.config.current_lim = 15
+dev0.axis1.motor.config.requested_current_range = 20
+
+dev0.save_configuration()
+
+#编码器参数配置
+dev0.axis0.encoder.config.mode = ENCODER_MODE_INCREMENTAL
+dev0.axis0.encoder.config.cpr = 16384
+dev0.axis0.encoder.config.bandwidth = 3000
+dev0.axis0.config.calibration_lockin.current = 5
+dev0.axis0.config.calibration_lockin.ramp_time = 0.4
+dev0.axis0.config.calibration_lockin.ramp_distance = 3.1415927410125732
+dev0.axis0.config.calibration_lockin.accel = 20
+dev0.axis0.config.calibration_lockin.vel = 40
+
+dev0.axis1.encoder.config.mode = ENCODER_MODE_INCREMENTAL
+dev0.axis1.encoder.config.cpr = 16384
+dev0.axis1.encoder.config.bandwidth = 3000
+dev0.axis1.config.calibration_lockin.current = 5
+dev0.axis1.config.calibration_lockin.ramp_time = 0.4
+dev0.axis1.config.calibration_lockin.ramp_distance = 3.1415927410125732
+dev0.axis1.config.calibration_lockin.accel = 20
+dev0.axis1.config.calibration_lockin.vel = 40
+dev0.save_configuration()
+
+#速度环控制器参数配置
+dev0.axis0.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL 	#可以切换电机的工作模式
+dev0.axis0.controller.config.vel_limit = 50
+dev0.axis0.controller.config.pos_gain = 30
+dev0.axis0.controller.config.vel_gain = 0.02  #参数自己根据实际运行情况整定
+dev0.axis0.controller.config.vel_integrator_gain = 0.2
+dev0.axis0.controller.config.input_mode = INPUT_MODE_VEL_RAMP  #其他信号输入模式参考https://docs.odriverobotics.com/api/odrive.controller.inputmode
+dev0.axis0.trap_traj.config.vel_limit = 30
+dev0.axis0.trap_traj.config.accel_limit = 5
+dev0.axis0.trap_traj.config.decel_limit = 5
+
+dev0.axis1.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL	#可以切换电机的工作模式
+dev0.axis1.controller.config.vel_limit = 50
+dev0.axis1.controller.config.pos_gain = 30
+dev0.axis1.controller.config.vel_gain = 0.02  #参数自己根据实际运行情况整定
+dev0.axis1.controller.config.vel_integrator_gain = 0.2
+dev0.axis1.controller.config.input_mode = INPUT_MODE_VEL_RAMP  #其他信号输入模式参考https://docs.odriverobotics.com/api/odrive.controller.inputmode
+dev0.axis1.trap_traj.config.vel_limit = 30
+dev0.axis1.trap_traj.config.accel_limit = 5
+dev0.axis1.trap_traj.config.decel_limit = 5
+
+#电流环控制器参数配置
+dev0.axis0.controller.config.control_mode = CONTROL_MODE_TORQUE_CONTROL
+dev0.axis0.controller.config.vel_limit = 50
+dev0.axis0.controller.config.pos_gain = 30
+dev0.axis0.controller.config.vel_gain = 0.02  				#参数自己根据实际运行情况整定
+dev0.axis0.controller.config.vel_integrator_gain = 0.2
+dev0.axis0.controller.config.input_mode = INPUT_MODE_PASSTHROUGH  	#其他信号输入模式参考https://docs.odriverobotics.com/api/odrive.controller.inputmode
+dev0.save_configuration()
+dev.reboot()
+dev0.save_configuration()
+
+#测试参数配置
+dev0.axis0.requested_state = AXIS_STATE_MOTOR_CALIBRATION  #校准电机，2S后会听见滴声。
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+dev0.axis0.requested_state = AXIS_STATE_ENCODER_OFFSET_CALIBRATION #校准编码器
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+dev0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL#进入闭环模式
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+
+dev0.axis1.requested_state = AXIS_STATE_MOTOR_CALIBRATION  #校准电机，2S后会听见滴声。
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+dev0.axis1.requested_state = AXIS_STATE_ENCODER_OFFSET_CALIBRATION #校准编码器
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+dev0.axis1.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL#进入闭环模式
+dump_errors(dev0)  #检测看是否有error有的话排除error再进行下一步
+
+#此处可能会出现CONTROLLER_ERROR_OVERSPEED 错误
+#官方说：odrv0.axis0.controller.config.vel_limit_tolerance = 0，可解决，实测不行
+#     解决办法：odrv0.axis0.controller.config.vel_limit = 100000
+#                     dev0.axis0.controller.config.vel_limit_tolerance = 10  这两个值都改的大一些，
+
+dev0.axis0.motor.config.pre_calibrated = True                   #开机自动校准电机
+dev0.axis0.config.startup_encoder_offset_calibration = True     #开机自动进行编码器校准
+dev0.axis0.config.startup_closed_loop_control = True            #开机自动进入闭环
+dev0.save_configuration()
+
+#速度环电机控制测试：
+
+dev0.axis0.controller.input_vel=10   #设定转速为10转每秒（r/s）
+dev0.axis0.controller.input_vel=0
+dev0.axis0.controller.input_vel=-20
+dev0.axis0.requested_state = AXIS_STATE_IDLE   #释放电机
+dev0.axis1.requested_state = AXIS_STATE_IDLE 
+
+start_liveplotter(lambda:[dev0.axis0.encoder.vel_estimate, dev0.axis0.controller.vel_setpoint])
+
+
+
+
+#电流环(转矩)电机控制测试：
+odrv0.axis0.controller.input_torque = 0.1					#改变转矩大小，可以用尝试阻挡电机转动，体会转矩的改变
+odrv0.axis0.controller.input_torque = -0.1
+odrv0.axis0.controller.input_torque = 0.01	
+odrv0.axis0.controller.input_torque = 1
+
+#电机电流和转矩估算
+查看指令电机电流
+odrv0.axis0.motor.current_control.Iq_setpoint
+
+查看测量的电机电流
+odrv0.axis0.motor.current_control.Iq_measured
+
+根据已知的电机KV、测得的电机电流，可以用以下公式来估算电机转矩：
+Torque [N.m] = 8.27 * Current [A] / KV.
+
+
+
+
+
+
+
